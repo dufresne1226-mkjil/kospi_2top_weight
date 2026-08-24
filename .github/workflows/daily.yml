@@ -7,11 +7,6 @@ on:
   workflow_dispatch: {}
   push:
     branches: [main]
-    # 워크플로우가 데이터·페이지를 커밋하면서 자기 자신을 다시 트리거하지 않도록
-    # data/** 와 docs/** 변경은 무시. 스크립트·워크플로우 손수 수정만 재빌드.
-    paths-ignore:
-      - "data/**"
-      - "docs/**"
 
 permissions:
   contents: write
@@ -43,7 +38,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "변경 없음 (휴장 또는 이미 적재됨)"
           else
-            git commit -m "daily: $(TZ=Asia/Seoul date +%Y-%m-%d) 시총비중 갱신"
+            git commit -m "daily: $(TZ=Asia/Seoul date +%Y-%m-%d) 시총비중 갱신 [skip ci]"
             git push
           fi
 

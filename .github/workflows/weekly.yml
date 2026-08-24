@@ -39,7 +39,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "변경 없음"
           else
-            git commit -m "weekly: $(TZ=Asia/Seoul date +%Y-%m-%d) 유니버스·앵커 갱신"
+            git commit -m "weekly: $(TZ=Asia/Seoul date +%Y-%m-%d) 유니버스·앵커 갱신 [skip ci]"
             git push
           fi
 
