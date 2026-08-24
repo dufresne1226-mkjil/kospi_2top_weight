@@ -1,0 +1,5 @@
+*.tmp
+data/*.tmp
+docs/*.tmp
+__pycache__/
+*.pyc

@@ -1,0 +1,362 @@
+<title>반도체 두 종목의 코스피 점유율</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#fbfbfc; --surface:#ffffff; --surface-2:#f4f5f7;
+  --ink:#101114; --ink-2:#4b4e57; --ink-3:#83868f;
+  --grid:#e6e7ec; --axis:#c9cbd3; --rule:rgba(16,17,20,.10);
+  --sec:#2a78d6; --hyn:#e34948; --sum:#008300; --kospi:#101114;
+  --band:#eceef3; --band-edge:#b9bdc9;
+  --shadow:0 1px 2px rgba(16,17,20,.05),0 8px 28px -12px rgba(16,17,20,.16);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#141519; --surface:#1b1d22; --surface-2:#22252b;
+    --ink:#f4f5f7; --ink-2:#b2b6c0; --ink-3:#7e828d;
+    --grid:#282b32; --axis:#3b3f48; --rule:rgba(255,255,255,.11);
+    --sec:#3987e5; --hyn:#e66767; --sum:#008300; --kospi:#f4f5f7;
+    --band:#24272e; --band-edge:#454a55;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#141519; --surface:#1b1d22; --surface-2:#22252b;
+  --ink:#f4f5f7; --ink-2:#b2b6c0; --ink-3:#7e828d;
+  --grid:#282b32; --axis:#3b3f48; --rule:rgba(255,255,255,.11);
+  --sec:#3987e5; --hyn:#e66767; --sum:#008300; --kospi:#f4f5f7;
+  --band:#24272e; --band-edge:#454a55;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 28px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-weight:400; line-height:1.6; word-break:keep-all;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:56px 24px 88px;display:flex;flex-direction:column;gap:40px}
+
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.18;margin:12px 0 0;
+  font-weight:600;letter-spacing:-.02em;text-wrap:balance;max-width:22ch}
+.dek{margin:16px 0 0;max-width:62ch;color:var(--ink-2);font-size:16px;font-weight:300}
+.dek b{font-weight:600;color:var(--ink)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:1px;
+  background:var(--rule);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.tile{background:var(--surface);padding:16px 18px 18px}
+.tile .k{font-size:11px;color:var(--ink-3);font-weight:500;letter-spacing:.02em}
+.tile .v{font-family:"IBM Plex Mono",monospace;font-size:26px;font-weight:600;
+  letter-spacing:-.02em;margin-top:7px;line-height:1.1}
+.tile .s{font-size:11.5px;color:var(--ink-3);margin-top:5px;font-family:"IBM Plex Mono",monospace}
+
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+  box-shadow:var(--shadow);overflow:hidden}
+.card-hd{padding:20px 22px 0;display:flex;flex-wrap:wrap;gap:14px;
+  align-items:baseline;justify-content:space-between}
+.card-hd h2{font-size:16px;font-weight:600;margin:0;letter-spacing:-.01em}
+.card-hd p{margin:5px 0 0;font-size:13px;color:var(--ink-3);font-weight:300;max-width:58ch}
+.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.lg{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2);font-weight:500}
+.sw{width:16px;height:3px;border-radius:2px;flex:none}
+.sw.kospi{background:var(--kospi)}
+.sw.band{height:12px;width:12px;border-radius:3px;background:var(--band);border:1px solid var(--band-edge)}
+.axnote{font-size:11px;color:var(--ink-3);font-family:"IBM Plex Mono",monospace}
+.plot{padding:6px 10px 14px;position:relative}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gl{stroke:var(--grid);stroke-width:1}
+.ax{stroke:var(--axis);stroke-width:1}
+.ax.minor{stroke:var(--axis);opacity:.5}
+.tk{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--ink-3);
+  font-variant-numeric:tabular-nums}
+.tk.right{fill:var(--ink-2)}
+.axtitle{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase}
+.ln{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.ln.sum{stroke-width:2.5}
+.ln.kospi{stroke-width:2}
+.dlabel{font-size:11.5px;font-weight:600;font-family:"IBM Plex Sans KR",sans-serif}
+.dlabel.halo{paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.xband{fill:var(--band)}
+.xedge{stroke:var(--band-edge);stroke-width:1;stroke-dasharray:2 3}
+.xdot{stroke:var(--surface);stroke-width:2}
+.hover-line{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:3 3;opacity:0}
+.hdot{opacity:0;stroke:var(--surface);stroke-width:2}
+.hit{fill:transparent;cursor:crosshair}
+.tip{position:absolute;pointer-events:none;opacity:1;
+  background:var(--surface);border:1px solid var(--rule);border-radius:8px;
+  box-shadow:var(--shadow);padding:10px 13px;font-size:12px;min-width:208px;
+  z-index:5}
+.tip .td{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);
+  margin-bottom:6px;letter-spacing:.02em;display:flex;justify-content:space-between;
+  gap:10px;align-items:baseline}
+.tip .state{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600}
+.tip .tr{display:flex;justify-content:space-between;gap:14px;align-items:center;line-height:1.85}
+.tip .tl{display:flex;align-items:center;gap:6px;color:var(--ink-2)}
+.tip .tv{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.tip .sep{margin-top:6px;padding-top:6px;border-top:1px solid var(--rule)}
+.tip .flag{margin-top:7px;padding-top:7px;border-top:1px solid var(--rule);
+  font-size:11px;font-weight:600;color:var(--hyn)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+.tscroll{overflow-x:auto}
+th,td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600}
+tbody td{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+tbody tr:last-child td{border-bottom:none}
+.gain{color:var(--hyn);font-weight:600}
+
+.notes{font-size:12.5px;color:var(--ink-3);font-weight:300;line-height:1.75;
+  border-top:1px solid var(--rule);padding-top:20px}
+.notes b{color:var(--ink-2);font-weight:600}
+.notes code{font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+  background:var(--surface-2);padding:1px 5px;border-radius:4px}
+/* 좁은 화면: 패널을 차트 위 일반 흐름으로 빼서 선을 가리지 않게 한다 */
+@media (max-width:620px){
+  .plot{display:flex;flex-direction:column;gap:10px;padding:10px 10px 14px}
+  .tip{position:static;order:-1;width:100%;min-width:0;
+    padding:10px 12px;font-size:12px;box-shadow:none;background:var(--surface-2)}
+  .tip .tr{line-height:1.7}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">코스피 시가총액 구성 · 2025.11 — 2026.08</div>
+    <h1>반도체 두 종목이 시장의 절반을 가져간 9개월</h1>
+    <p class="dek">삼성전자와 SK하이닉스가 코스피 전체 시가총액에서 차지하는 비중은 2025년 11월 21일 <b>29.62%</b>에서 2026년 6월 25일 <b>57.36%</b>까지 올랐다. 같은 기간 SK하이닉스는 다섯 차례 삼성전자를 앞질렀다.</p>
+  </header>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section class="card">
+    <div class="card-hd">
+      <div>
+        <h2>시가총액 비중과 코스피 지수</h2>
+        <p>음영 구간은 SK하이닉스 비중이 삼성전자를 넘어선 거래일이다. 비중 세 개는 왼쪽 축, 코스피 지수는 오른쪽 축을 쓴다.</p>
+      </div>
+      <div class="legend">
+        <span class="lg"><span class="sw" style="background:var(--sec)"></span>삼성전자</span>
+        <span class="lg"><span class="sw" style="background:var(--hyn)"></span>SK하이닉스</span>
+        <span class="lg"><span class="sw" style="background:var(--sum)"></span>합계</span>
+        <span class="lg"><span class="sw kospi"></span>코스피 <span class="axnote">(우축)</span></span>
+        <span class="lg"><span class="sw band"></span>역전 구간</span>
+      </div>
+    </div>
+    <div class="plot" id="p1"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-hd"><div><h2>SK하이닉스가 앞선 5거래일</h2></div></div>
+    <div class="tscroll"><table id="xt">
+      <thead><tr><th>날짜</th><th>코스피</th><th>삼성전자</th><th>SK하이닉스</th><th>격차</th><th>합계</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <p class="notes">
+    <b>산출 방식</b> · 네이버 금융 일별시세에서 코스피 상장 1,285종목(ETF 865종목 제외)의 상장주식수 × 종가를 합산해 총시가총액을 구하고, 삼성전자(005930)와 SK하이닉스(000660) 보통주 시가총액의 비율을 계산했다. 우선주는 제외했다. 대상 기간 197거래일.<br><br>
+    <b>검증</b> · 합산 시가총액 증감률 <code>+63.27%</code>는 같은 기간 코스피 지수 증감률 <code>+62.26%</code>와 1.01%p 차이다. 이 차이는 기간 중 신규상장 58종목 유입분에 해당한다.<br><br>
+    <b>두 개의 y축에 대하여</b> · 왼쪽은 비중(%), 오른쪽은 지수(포인트)로 단위가 다르다. 왼쪽 축은 0%에서 100%까지 10%p 간격으로 고정했고, 오른쪽 축은 0에서 시작해 500 간격으로 눈금을 매기고 숫자는 2,000 단위에만 붙였다. 두 축의 눈금 범위가 서로 독립적이므로 검정 선과 색 선이 만나거나 벌어지는 지점 자체에는 의미가 없다. 읽어야 할 것은 각 선의 방향과 기울기다.<br><br>
+    <b>한계</b> · 상장주식수는 2026년 8월 기준으로 고정했다. 기간 중 유상증자나 자사주 소각을 한 종목은 과거 시가총액이 실제와 다르게 계산되며, 중간에 상장폐지된 종목은 집계에서 빠져 있다. 삼성전자와 SK하이닉스는 해당 기간 주식수 변동이 없어 두 종목의 비중 추이 자체는 영향받지 않는다. 2026년 8월 20일과 21일 두 날은 삼성전자·SK하이닉스만 실측하고, 분모인 총시가총액은 8월 19일 실측값에 코스피 지수 변동률을 적용해 환산했다.
+  </p>
+</div>
+
+<script>
+const D = {"d":["2025-11-03","2025-11-04","2025-11-05","2025-11-06","2025-11-07","2025-11-10","2025-11-11","2025-11-12","2025-11-13","2025-11-14","2025-11-17","2025-11-18","2025-11-19","2025-11-20","2025-11-21","2025-11-24","2025-11-25","2025-11-26","2025-11-27","2025-11-28","2025-12-01","2025-12-02","2025-12-03","2025-12-04","2025-12-05","2025-12-08","2025-12-09","2025-12-10","2025-12-11","2025-12-12","2025-12-15","2025-12-16","2025-12-17","2025-12-18","2025-12-19","2025-12-22","2025-12-23","2025-12-24","2025-12-26","2025-12-29","2025-12-30","2026-01-02","2026-01-05","2026-01-06","2026-01-07","2026-01-08","2026-01-09","2026-01-12","2026-01-13","2026-01-14","2026-01-15","2026-01-16","2026-01-19","2026-01-20","2026-01-21","2026-01-22","2026-01-23","2026-01-26","2026-01-27","2026-01-28","2026-01-29","2026-01-30","2026-02-02","2026-02-03","2026-02-04","2026-02-05","2026-02-06","2026-02-09","2026-02-10","2026-02-11","2026-02-12","2026-02-13","2026-02-19","2026-02-20","2026-02-23","2026-02-24","2026-02-25","2026-02-26","2026-02-27","2026-03-03","2026-03-04","2026-03-05","2026-03-06","2026-03-09","2026-03-10","2026-03-11","2026-03-12","2026-03-13","2026-03-16","2026-03-17","2026-03-18","2026-03-19","2026-03-20","2026-03-23","2026-03-24","2026-03-25","2026-03-26","2026-03-27","2026-03-30","2026-03-31","2026-04-01","2026-04-02","2026-04-03","2026-04-06","2026-04-07","2026-04-08","2026-04-09","2026-04-10","2026-04-13","2026-04-14","2026-04-15","2026-04-16","2026-04-17","2026-04-20","2026-04-21","2026-04-22","2026-04-23","2026-04-24","2026-04-27","2026-04-28","2026-04-29","2026-04-30","2026-05-04","2026-05-06","2026-05-07","2026-05-08","2026-05-11","2026-05-12","2026-05-13","2026-05-14","2026-05-15","2026-05-18","2026-05-19","2026-05-20","2026-05-21","2026-05-22","2026-05-26","2026-05-27","2026-05-28","2026-05-29","2026-06-01","2026-06-02","2026-06-04","2026-06-05","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-22","2026-06-23","2026-06-24","2026-06-25","2026-06-26","2026-06-29","2026-06-30","2026-07-01","2026-07-02","2026-07-03","2026-07-06","2026-07-07","2026-07-08","2026-07-09","2026-07-10","2026-07-13","2026-07-14","2026-07-15","2026-07-16","2026-07-20","2026-07-21","2026-07-22","2026-07-23","2026-07-24","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-10","2026-08-11","2026-08-12","2026-08-13","2026-08-14","2026-08-18","2026-08-19","2026-08-20","2026-08-21"],"s":[18.75,18.147,17.922,17.583,17.671,17.631,17.985,17.733,17.592,17.299,17.559,17.658,17.533,17.931,17.562,17.95,18.353,18.509,18.528,18.269,18.343,18.471,18.494,18.63,18.874,18.816,18.681,18.648,18.634,18.665,18.301,18.363,18.982,19.228,18.87,19.204,19.322,19.292,20.211,20.208,20.311,21.271,22.081,21.879,22.079,21.738,21.604,21.389,20.901,21.172,21.373,21.897,21.669,21.173,21.674,21.9,21.712,21.89,22.346,22.366,21.925,21.885,21.657,22.57,22.442,21.999,22.22,22.405,22.316,22.36,23.072,23.449,23.838,23.318,23.529,23.87,23.831,24.618,24.703,24.019,24.095,24.427,23.985,23.51,24.142,24.066,23.931,23.77,24.152,24.421,24.995,24.715,24.53,24.503,24.287,23.83,23.48,23.518,23.787,23.573,24.641,24.281,24.654,25.214,25.444,25.507,25.121,25.018,24.621,24.62,24.653,24.859,24.828,24.548,24.393,24.113,24.659,24.119,24.132,23.77,24.011,23.759,23.816,25.566,25.75,25.443,25.911,25.926,25.715,26.341,25.647,26.544,26.899,27.186,27.226,26.487,26.413,26.514,26.002,26.564,28.147,29.03,28.863,28.595,28.002,28.218,27.778,27.334,28.168,27.985,27.884,27.732,28.379,27.759,27.519,26.807,28.518,28.442,28.602,27.3,27.956,26.88,26.547,27.135,27.991,27.411,27.15,27.035,27.024,26.509,27.178,27.196,26.531,26.55,27.195,27.14,26.953,26.433,26.646,25.89,26.068,26.203,28.146,27.073,26.718,26.391,25.924,26.14,25.856,26.704,27.481,27.858,27.85,27.681,27.096,28.017,28.783],"h":[13.074,12.667,12.889,13.133,13.081,13.271,13.44,13.26,13.086,12.453,13.216,12.859,12.758,12.717,12.06,12.061,11.986,11.788,12.168,12.038,12.233,12.455,12.206,12.005,11.835,12.389,12.188,12.664,12.26,12.229,12.088,11.83,12.112,12.325,12.133,12.595,12.645,12.758,12.929,13.523,13.78,14.002,13.905,14.289,14.518,14.794,14.449,14.421,14.007,13.991,13.9,13.892,13.855,13.537,13.405,13.565,13.681,13.235,14.005,14.472,14.678,15.487,14.933,15.271,14.924,14.529,14.687,14.923,14.732,14.319,14.333,14.229,14.015,14.545,14.487,14.987,14.896,15.507,15.126,14.444,14.844,14.99,14.714,14.154,15.059,15.115,14.8,14.729,15.577,15.265,15.818,15.602,15.479,15.333,15.773,15.675,15.199,15.077,14.718,14.216,14.501,14.115,14.493,14.455,14.82,15.64,15.356,15.584,15.918,16.432,16.584,16.494,16.201,16.673,17.035,16.941,16.812,16.777,17.353,17.392,17.164,17.314,18.521,19.227,19.601,19.962,21.319,21.306,22.356,21.905,21.55,21.718,21.288,21.477,22.036,21.962,22.65,24.205,24.831,24.428,23.812,23.746,23.578,22.48,22.627,24.254,23.498,23.999,23.464,23.741,24.196,25.21,26.264,27.082,28.394,27.607,27.0,28.917,28.138,27.754,27.715,27.34,25.365,26.565,25.769,25.467,25.379,26.562,25.828,24.012,24.701,25.313,23.947,23.983,24.088,23.823,23.936,23.285,23.804,22.791,21.886,20.91,23.017,22.133,21.936,22.359,21.009,20.107,19.946,19.852,20.213,20.69,20.854,21.41,20.519,21.844,22.102],"m":[31.825,30.814,30.811,30.717,30.751,30.902,31.426,30.994,30.677,29.752,30.776,30.518,30.291,30.647,29.622,30.01,30.339,30.297,30.695,30.308,30.576,30.926,30.7,30.635,30.708,31.205,30.869,31.312,30.895,30.894,30.39,30.193,31.094,31.553,31.002,31.799,31.967,32.05,33.141,33.731,34.091,35.273,35.987,36.168,36.597,36.532,36.053,35.81,34.909,35.163,35.273,35.789,35.524,34.71,35.079,35.466,35.393,35.125,36.351,36.838,36.604,37.373,36.59,37.841,37.366,36.528,36.907,37.328,37.048,36.679,37.405,37.678,37.853,37.863,38.016,38.857,38.727,40.125,39.829,38.463,38.939,39.418,38.699,37.664,39.2,39.181,38.731,38.498,39.729,39.685,40.812,40.317,40.009,39.836,40.06,39.505,38.679,38.596,38.505,37.79,39.142,38.396,39.147,39.67,40.264,41.147,40.476,40.602,40.539,41.052,41.237,41.353,41.029,41.221,41.428,41.054,41.471,40.896,41.486,41.162,41.175,41.074,42.337,44.793,45.352,45.405,47.23,47.233,48.07,48.247,47.196,48.263,48.187,48.663,49.262,48.448,49.063,50.719,50.832,50.992,51.959,52.775,52.441,51.075,50.63,52.473,51.276,51.333,51.632,51.726,52.08,52.942,54.643,54.841,55.913,54.414,55.518,57.359,56.739,55.054,55.671,54.22,51.912,53.7,53.76,52.878,52.528,53.597,52.852,50.521,51.879,52.51,50.478,50.533,51.283,50.963,50.889,49.718,50.449,48.681,47.954,47.112,51.163,49.206,48.653,48.75,46.933,46.247,45.803,46.556,47.693,48.548,48.704,49.091,47.615,49.862,50.885],"k":[4221.87,4121.74,4004.42,4026.45,3953.76,4073.24,4106.39,4150.39,4170.63,4011.57,4089.25,3953.62,3929.51,4004.85,3853.26,3846.06,3857.78,3960.87,3986.91,3926.59,3920.37,3994.93,4036.3,4028.51,4100.05,4154.85,4143.55,4135.0,4110.62,4167.16,4090.59,3999.13,4056.41,3994.51,4020.55,4105.93,4117.32,4108.62,4129.68,4220.56,4214.17,4309.63,4457.52,4525.48,4551.06,4552.37,4586.32,4624.79,4692.64,4723.1,4797.55,4840.74,4904.66,4885.75,4909.93,4952.53,4990.07,4949.59,5084.85,5170.81,5221.25,5224.36,4949.67,5288.08,5371.1,5163.57,5089.14,5298.04,5301.69,5354.49,5522.27,5507.01,5677.25,5808.53,5846.09,5969.64,6083.86,6307.27,6244.13,5791.91,5093.54,5583.9,5584.87,5251.87,5532.59,5609.95,5583.25,5487.24,5549.85,5640.48,5925.03,5763.22,5781.2,5405.75,5553.92,5642.21,5460.46,5438.87,5277.3,5052.46,5478.7,5234.05,5377.3,5450.33,5494.78,5872.34,5778.01,5858.87,5808.62,5967.75,6091.39,6226.05,6191.92,6219.09,6388.47,6417.93,6475.81,6475.63,6615.03,6641.02,6690.9,6598.87,6936.99,7384.56,7490.05,7498.0,7822.24,7643.15,7844.01,7981.41,7493.18,7516.04,7271.66,7208.95,7815.59,7847.71,8047.51,8228.7,8185.29,8476.15,8788.38,8801.49,8639.41,8160.59,7484.41,8096.93,7730.82,7763.95,8123.62,8545.98,8726.6,8864.24,9063.84,9052.42,9114.55,8203.84,8471.02,8930.3,8411.21,8394.65,8476.48,8303.41,7648.09,8088.34,8051.33,7656.31,7246.79,7291.91,7475.94,6806.93,6856.83,7284.41,6820.6,6516.27,6747.95,6797.7,7096.89,6690.62,6755.75,6023.66,5663.24,5593.56,6595.45,6257.45,6358.95,6598.26,6296.38,6258.77,6299.66,6345.53,6579.04,6813.34,6977.94,6869.83,6471.17,6852.58,6912.95],"t":[3464.1,3379.4,3281.6,3298.3,3239.0,3335.8,3364.3,3399.0,3416.4,3284.9,3349.4,3237.9,3217.8,3280.0,3155.9,3149.6,3163.1,3247.1,3265.9,3216.0,3212.7,3272.7,3303.5,3298.1,3357.8,3402.2,3392.4,3385.9,3366.4,3410.9,3347.8,3272.8,3323.2,3271.6,3293.5,3363.9,3373.7,3366.8,3384.3,3457.2,3451.1,3531.9,3656.3,3711.5,3733.5,3732.9,3761.5,3793.9,3848.8,3874.2,3936.2,3975.5,4028.1,4009.3,4032.5,4065.6,4095.5,4062.2,4172.9,4245.0,4285.0,4287.4,4060.1,4338.7,4405.2,4233.5,4173.0,4342.0,4343.6,4387.3,4525.6,4517.7,4659.7,4766.1,4795.4,4898.4,4992.3,5177.1,5123.8,4748.8,4178.1,4585.6,4587.3,4314.5,4550.3,4615.5,4590.3,4513.3,4567.6,4642.0,4876.9,4742.8,4752.4,4445.0,4566.5,4636.8,4484.3,4467.0,4333.0,4146.6,4498.5,4295.5,4415.3,4477.3,4515.0,4824.7,4747.6,4814.0,4772.7,4903.5,5003.7,5115.2,5086.2,5108.5,5248.7,5273.4,5322.6,5320.6,5438.7,5460.2,5502.8,5425.7,5707.3,6082.7,6164.0,6169.7,6441.7,6291.3,6456.8,6569.5,6166.1,6188.9,5987.8,5935.3,6431.1,6456.2,6618.0,6769.3,6734.0,6976.6,7248.9,7260.1,7119.7,6726.5,6169.4,6671.2,6366.6,6395.1,6693.4,7040.1,7191.5,7304.8,7467.8,7455.4,7509.8,6760.7,6980.3,7368.9,6939.5,6917.0,6984.7,6840.1,6298.4,6668.2,6641.8,6313.2,5975.5,6011.8,6165.6,5612.8,5657.4,6008.3,5619.0,5372.9,5567.9,5611.5,5856.4,5518.3,5573.0,4968.0,4676.1,4618.5,5452.4,5171.9,5251.6,5449.5,5198.2,5166.3,5200.4,5243.4,5435.5,5624.3,5762.3,5670.7,5340.1,5654.8,5717.7]};
+const N = D.d.length;
+const XI = [];
+for (let i=0;i<N;i++) if (D.h[i] > D.s[i]) XI.push(i);
+
+const fmtK = v => v.toLocaleString('ko-KR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct  = v => v.toFixed(2)+'%';
+
+const last=N-1;
+const peak=D.m.indexOf(Math.max(...D.m));
+const trough=D.m.indexOf(Math.min(...D.m));
+document.getElementById('tiles').innerHTML = [
+  ['현재 합계 비중', D.m[last].toFixed(2)+'%', D.d[last]],
+  ['최고', D.m[peak].toFixed(2)+'%', D.d[peak]],
+  ['최저', D.m[trough].toFixed(2)+'%', D.d[trough]],
+  ['하이닉스 역전', XI.length+'일', '196거래일 중'],
+  ['총시가총액', D.t[last].toLocaleString('ko-KR')+'조', D.d[last]],
+].map(([k,v,s])=>`<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+
+document.querySelector('#xt tbody').innerHTML = XI.map(i=>`<tr>
+  <td>${D.d[i]}</td><td>${fmtK(D.k[i])}</td><td>${D.s[i].toFixed(2)}%</td>
+  <td>${D.h[i].toFixed(2)}%</td><td class="gain">+${(D.h[i]-D.s[i]).toFixed(2)}%p</td>
+  <td>${D.m[i].toFixed(2)}%</td></tr>`).join('');
+
+/* ── 이중축 차트 ── */
+const W=1000, H=680, PL=56, PR=74, PT=30, PB=34;
+
+function niceTicks(lo,hi,n){
+  const raw=(hi-lo)/n, mag=Math.pow(10,Math.floor(Math.log10(raw))), norm=raw/mag;
+  const step=(norm<=1?1:norm<=2?2:norm<=2.5?2.5:norm<=5?5:10)*mag;
+  const out=[]; for(let v=Math.ceil(lo/step)*step; v<=hi+1e-9; v+=step) out.push(+v.toFixed(10));
+  return out;
+}
+
+const pctSeries=[
+  {n:'삼성전자', key:'s', v:D.s, c:'var(--sec)', cls:''},
+  {n:'SK하이닉스', key:'h', v:D.h, c:'var(--hyn)', cls:''},
+  {n:'합계', key:'m', v:D.m, c:'var(--sum)', cls:'sum'},
+];
+const kSeries={n:'코스피', key:'k', v:D.k, c:'var(--kospi)', cls:'kospi'};
+
+/* 좌축: 0% ~ 100% 고정, 10%p 간격 */
+const PSTEP=10;
+const lo1=0, hi1=100;
+/* 우축: 0에서 시작, 눈금 500 간격 · 숫자는 2,000 단위만 */
+const KSTEP=500, KLABEL=2000;
+const lo2=0, hi2=Math.ceil(Math.max(...D.k)/KLABEL)*KLABEL;
+
+const X=i=>PL+i*(W-PL-PR)/(N-1);
+const Y1=v=>PT+(H-PT-PB)*(1-(v-lo1)/(hi1-lo1));
+const Y2=v=>PT+(H-PT-PB)*(1-(v-lo2)/(hi2-lo2));
+
+const t1=[]; for(let v=lo1; v<=hi1+1e-9; v+=PSTEP) t1.push(v);
+const t2=[]; for(let v=lo2; v<=hi2+1e-9; v+=KSTEP) t2.push(v);
+let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="삼성전자와 SK하이닉스의 코스피 시가총액 비중 및 코스피 지수 추이">';
+
+/* 역전 밴드 */
+let grp=[], prev=-9;
+XI.forEach(i=>{ if(i-prev>1) grp.push([i,i]); else grp[grp.length-1][1]=i; prev=i; });
+grp.forEach(([a,b])=>{
+  const x1=X(a)-3, x2=X(b)+3;
+  s+=`<rect class="xband" x="${x1.toFixed(1)}" y="${PT}" width="${(x2-x1).toFixed(1)}" height="${H-PT-PB}"/>`;
+  s+=`<line class="xedge" x1="${x1.toFixed(1)}" y1="${PT}" x2="${x1.toFixed(1)}" y2="${H-PB}"/>`;
+  s+=`<line class="xedge" x1="${x2.toFixed(1)}" y1="${PT}" x2="${x2.toFixed(1)}" y2="${H-PB}"/>`;
+});
+
+/* 좌축 그리드 */
+t1.forEach(t=>{
+  const y=Y1(t).toFixed(1);
+  s+=`<line class="gl" x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}"/>`;
+  s+=`<text class="tk" x="${PL-9}" y="${y}" text-anchor="end" dominant-baseline="middle">${t.toFixed(0)}%</text>`;
+});
+/* 우축 눈금 (그리드 없음 — 좌축 그리드와 충돌 방지) */
+t2.forEach(t=>{
+  const y=Y2(t).toFixed(1);
+  const major = t % KLABEL === 0;
+  s+=`<line class="ax${major?'':' minor'}" x1="${W-PR}" y1="${y}" x2="${W-PR+(major?5:3)}" y2="${y}"/>`;
+  if(major)
+    s+=`<text class="tk right" x="${W-PR+10}" y="${y}" text-anchor="start" dominant-baseline="middle">${t.toLocaleString('ko-KR')}</text>`;
+});
+
+/* 축 제목 */
+s+=`<text class="axtitle" x="${PL-9}" y="${PT-11}" text-anchor="end" fill="var(--ink-3)">비중 %</text>`;
+s+=`<text class="axtitle" x="${W-PR+9}" y="${PT-11}" text-anchor="start" fill="var(--ink-2)">코스피</text>`;
+
+/* x축 */
+let lastM='';
+for(let i=0;i<N;i++){
+  const m=D.d[i].slice(0,7);
+  if(m!==lastM){ lastM=m; const x=X(i).toFixed(1);
+    s+=`<line class="ax" x1="${x}" y1="${H-PB}" x2="${x}" y2="${H-PB+4}"/>`;
+    s+=`<text class="tk" x="${x}" y="${H-PB+17}" text-anchor="middle">${m.slice(2).replace('-','.')}</text>`;
+  }
+}
+s+=`<line class="ax" x1="${PL}" y1="${H-PB}" x2="${W-PR}" y2="${H-PB}"/>`;
+s+=`<line class="ax" x1="${W-PR}" y1="${PT}" x2="${W-PR}" y2="${H-PB}"/>`;
+
+/* 라인 — 코스피를 먼저(뒤로) 깔고 비중 3종을 위에 */
+const kd=kSeries.v.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y2(v).toFixed(1)}`).join(' ');
+s+=`<path class="ln kospi" d="${kd}" stroke="var(--kospi)"/>`;
+pctSeries.forEach(sr=>{
+  const dd=sr.v.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y1(v).toFixed(1)}`).join(' ');
+  s+=`<path class="ln ${sr.cls}" d="${dd}" stroke="${sr.c}"/>`;
+});
+
+/* 역전일 마커 */
+XI.forEach(i=>{
+  s+=`<circle class="xdot" cx="${X(i).toFixed(1)}" cy="${Y1(D.h[i]).toFixed(1)}" r="4.5" fill="var(--hyn)"/>`;
+});
+
+/* 직접 라벨 (빨강↔초록 CVD 보조 표기) — 충돌 회피 */
+const labs=[
+  {t:'삼성전자', y:Y1(D.s[last]), c:'var(--sec)'},
+  {t:'SK하이닉스', y:Y1(D.h[last]), c:'var(--hyn)'},
+  {t:'합계', y:Y1(D.m[last]), c:'var(--sum)'},
+  {t:'코스피', y:Y2(D.k[last]), c:'var(--kospi)'},
+].sort((a,b)=>a.y-b.y);
+for(let i=1;i<labs.length;i++) if(labs[i].y-labs[i-1].y<17) labs[i].y=labs[i-1].y+17;
+labs.forEach(l=>{
+  s+=`<text class="dlabel halo" x="${(W-PR-10).toFixed(1)}" y="${l.y.toFixed(1)}" fill="${l.c}" text-anchor="end" dominant-baseline="middle">${l.t}</text>`;
+});
+
+/* 호버 */
+s+=`<line class="hover-line" id="hl" y1="${PT}" y2="${H-PB}"/>`;
+pctSeries.forEach((sr,j)=>{ s+=`<circle class="hdot" id="hd${j}" r="4.5" fill="${sr.c}"/>`; });
+s+=`<circle class="hdot" id="hdk" r="4.5" fill="var(--kospi)"/>`;
+s+=`<rect class="hit" x="${PL}" y="0" width="${W-PL-PR}" height="${H}"/>`;
+s+='</svg><div class="tip" id="tip"></div>';
+
+const el=document.getElementById('p1');
+el.innerHTML=s;
+
+const svg=el.querySelector('svg'), tip=el.querySelector('#tip');
+const hl=el.querySelector('#hl'), hdk=el.querySelector('#hdk');
+const hds=pctSeries.map((_,j)=>el.querySelector('#hd'+j));
+const hit=el.querySelector('.hit');
+
+/* 넓은 화면: 좌측 상단 80% 눈금 높이에 고정. 좁은 화면: CSS가 흐름 배치로 처리 */
+const MQ=matchMedia('(max-width:620px)');
+function placeTip(){
+  if(MQ.matches){ tip.style.left=''; tip.style.top=''; return; }
+  const r=svg.getBoundingClientRect(), pr=el.getBoundingClientRect();
+  if(!r.width) return;
+  tip.style.left=((r.left-pr.left)+(PL+16)/W*r.width)+'px';
+  tip.style.top =((r.top -pr.top )+Y1(80)/H*r.height)+'px';
+}
+
+const row=(c,n,v)=>`<div class="tr"><span class="tl"><span style="background:${c};width:14px;height:3px;border-radius:2px;display:inline-block"></span>${n}</span><span class="tv">${v}</span></div>`;
+
+function fill(i, live){
+  tip.innerHTML = `<div class="td"><span>${D.d[i]}</span><span class="state">${live?'커서':'최신'}</span></div>`
+    + row('var(--sec)','삼성전자',pct(D.s[i]))
+    + row('var(--hyn)','SK하이닉스',pct(D.h[i]))
+    + row('var(--sum)','합계',pct(D.m[i]))
+    + `<div class="sep">` + row('var(--kospi)','코스피',fmtK(D.k[i])) + `</div>`
+    + (XI.includes(i) ? `<div class="flag">SK하이닉스 +${(D.h[i]-D.s[i]).toFixed(2)}%p 앞섬</div>` : '');
+}
+
+function move(ev){
+  const r=svg.getBoundingClientRect();
+  const px=(ev.clientX-r.left)/r.width*W;
+  let i=Math.round((px-PL)/((W-PL-PR)/(N-1)));
+  i=Math.max(0,Math.min(N-1,i));
+  const x=X(i);
+  hl.setAttribute('x1',x); hl.setAttribute('x2',x); hl.style.opacity=1;
+  pctSeries.forEach((sr,j)=>{ hds[j].setAttribute('cx',x); hds[j].setAttribute('cy',Y1(sr.v[i])); hds[j].style.opacity=1; });
+  hdk.setAttribute('cx',x); hdk.setAttribute('cy',Y2(D.k[i])); hdk.style.opacity=1;
+  fill(i,true);
+}
+function leave(){
+  hl.style.opacity=0; hds.forEach(h=>h.style.opacity=0); hdk.style.opacity=0;
+  fill(N-1,false);
+}
+hit.addEventListener('mousemove',move);
+hit.addEventListener('mouseleave',leave);
+hit.addEventListener('touchmove',e=>{ move(e.touches[0]); e.preventDefault(); },{passive:false});
+hit.addEventListener('touchend',leave);
+
+fill(N-1,false);
+placeTip();
+/* 창 리사이즈 없이 컨테이너만 바뀌는 경우(iframe·주소창 접힘 등)까지 잡는다 */
+addEventListener('resize',placeTip);
+if(window.ResizeObserver) new ResizeObserver(placeTip).observe(el);
+if(MQ.addEventListener) MQ.addEventListener('change',placeTip);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(placeTip);
+requestAnimationFrame(placeTip);
+</script>

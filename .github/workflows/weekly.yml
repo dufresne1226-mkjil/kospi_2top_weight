@@ -1,0 +1,50 @@
+name: 주간 유니버스 갱신 + 앵커 재설정
+
+on:
+  schedule:
+    # 토요일 07:28 KST = 금요일 22:28 UTC.
+    - cron: "28 22 * * 5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 유니버스 갱신 (상장주식수·신규상장·ETF)
+        run: python3 refresh_universe.py
+
+      - name: 직전 금요일 전종목 재계산 (앵커 갱신)
+        run: python3 build.py $(TZ=Asia/Seoul date -d 'last friday' +%Y%m%d) --full --force
+
+      - name: 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ docs/index.html
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "weekly: $(TZ=Asia/Seoul date +%Y-%m-%d) 유니버스·앵커 갱신"
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - uses: actions/deploy-pages@v4
