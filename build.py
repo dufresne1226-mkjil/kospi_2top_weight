@@ -55,17 +55,14 @@ def sise(symbol, start, end):
             if r and str(r[0]).isdigit() and isinstance(r[4], (int, float))}
 
 
-def main():
-    args  = [a for a in sys.argv[1:] if not a.startswith('--')]
-    force = '--force' in sys.argv
-    full  = '--full'  in sys.argv
-    day   = args[0] if args else datetime.now(KST).strftime('%Y%m%d')
+def process_day(day, full=False, force=False):
+    """하루치를 적재한다. 반환: 0=적재/이미있음/휴장(정상), 1=오류."""
     iso   = f'{day[:4]}-{day[4:6]}-{day[6:]}'
 
     rows = json.load(open(f'{DATA}/daily_weights.json'))
     byd  = {r['date']: r for r in rows}
     if iso in byd and not force:
-        log(f'{iso} 이미 존재 — 종료'); return 0
+        log(f'{iso} 이미 존재 — 건너뜀'); return 0
 
     kospi = sise('KOSPI', day, day)
     if day not in kospi:
@@ -170,6 +167,39 @@ def render(cd):
         log('docs/index.html 데이터 갱신 완료')
     else:
         log('docs/index.html 치환 실패 — 형식 확인 필요 (const D 패턴 불일치)')
+
+
+def main():
+    """
+    인자로 날짜를 주면 그 하루만 처리(수동 보정용).
+    인자가 없으면 마지막 기록일 다음날부터 오늘까지 빠진 날을 전부 채운다(catch-up).
+    cron 이 며칠 밀려도 다음 실행에서 한꺼번에 복구된다.
+    """
+    args  = [a for a in sys.argv[1:] if not a.startswith('--')]
+    force = '--force' in sys.argv
+    full  = '--full'  in sys.argv
+
+    if args:
+        return process_day(args[0], full=full, force=force)
+
+    rows  = json.load(open(f'{DATA}/daily_weights.json'))
+    last  = max(r['date'] for r in rows)
+    start = datetime.strptime(last, '%Y-%m-%d').date() + timedelta(days=1)
+    today = datetime.now(KST).date()
+
+    if start > today:
+        log(f'\ub9c8\uc9c0\ub9c9 \uae30\ub85d {last} \u2014 \ucc44\uc6b8 \ub0a0 \uc5c6\uc74c'); return 0
+
+    log(f'catch-up: {start} ~ {today} (\ub9c8\uc9c0\ub9c9 \uae30\ub85d {last})')
+    rc = 0
+    d = start
+    while d <= today:
+        if d.weekday() < 5:
+            r = process_day(d.strftime('%Y%m%d'), full=full, force=False)
+            if r != 0:
+                rc = r
+        d += timedelta(days=1)
+    return rc
 
 
 if __name__ == '__main__':
